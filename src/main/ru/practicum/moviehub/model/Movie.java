@@ -1,7 +1,7 @@
 package ru.practicum.moviehub.model;
 
 public class Movie {
-    private final int id;      // или Long, если в ТЗ требуются обертки
+    private final int id;
     private final String title;
     private final int year;
 
@@ -11,7 +11,10 @@ public class Movie {
         this.year = year;
     }
 
-    public int getId() { return id; }
+    public int getId() {
+        return id;
+    }
+
     public String getTitle() {
         return title;
     }
