@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MoviesHandler extends BaseHttpHandler {
     private static final int CINEMA_BIRTH_YEAR = 1888;
