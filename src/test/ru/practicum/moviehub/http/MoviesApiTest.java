@@ -320,6 +320,24 @@ public class MoviesApiTest {
     }
 
     @Test
+    void deleteMovieById_whenIdAbsents_returns400AndErrorResponse() throws Exception {
+
+        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(BASE + "/movies/")).DELETE().build();
+
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        assertEquals(400, resp.statusCode(), "DELETE /movies/ должен вернуть 400");
+
+        String contentTypeHeaderValue = resp.headers().firstValue("Content-Type").orElse("");
+        assertEquals("application/json; charset=UTF-8", contentTypeHeaderValue, "Content-Type должен " +
+                "содержать формат данных и кодировку");
+
+        String body = resp.body();
+        assertTrue(body.contains("\"error\":"), "Ответ должен содержать короткое описание ошибки");
+        assertTrue(body.contains("details"), "Ответ должен содержать массив строк с деталями проблемы");
+    }
+
+    @Test
     void getMoviesByYear_whenCorrectDate_returnsMoviesArray() throws Exception {
         Movie interstellar = new Movie(1, "Интерстеллар", 2014);
         Movie martian = new Movie(2, "Марсианин", 2015);

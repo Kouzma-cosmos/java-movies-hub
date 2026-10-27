@@ -9,10 +9,12 @@ import ru.practicum.moviehub.store.MoviesStore;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MoviesHandler extends BaseHttpHandler {
+    private static final int CINEMA_BIRTH_YEAR = 1888;
 
     public MoviesHandler(MoviesStore store) {
         super(store);
@@ -45,6 +47,12 @@ public class MoviesHandler extends BaseHttpHandler {
         String path = ex.getRequestURI().getPath();
         String[] pathParts = path.split("/");
 
+        if (isInvalidPath(pathParts)) {
+            ErrorResponse error = new ErrorResponse("Ошибка валидации!", new String[]{"Отсутствует Id фильма"});
+            sendJson(ex, 400, gson.toJson(error));
+            return;
+        }
+
         String idString = pathParts[2];
         int id;
 
@@ -53,6 +61,7 @@ public class MoviesHandler extends BaseHttpHandler {
         } catch (NumberFormatException excp) {
             ErrorResponse error = new ErrorResponse("Ошибка валидации!", new String[]{"Id не число"});
             sendJson(ex, 400, gson.toJson(error));
+
             return;
         }
 
@@ -69,6 +78,7 @@ public class MoviesHandler extends BaseHttpHandler {
     }
 
     private void handlePost(HttpExchange ex) throws IOException {
+
         Headers headers = ex.getRequestHeaders();
 
         String contentType = headers.getFirst("Content-Type");
@@ -101,6 +111,7 @@ public class MoviesHandler extends BaseHttpHandler {
                     "быть пустым"});
             String errorJson = gson.toJson(error);
             sendJson(ex, 422, errorJson);
+            return;
         }
 
         if (movieFromUser.getTitle().length() > 100) {
@@ -108,13 +119,17 @@ public class MoviesHandler extends BaseHttpHandler {
                     "кол-во символов в поле 'title'"});
             String errorJson = gson.toJson(error);
             sendJson(ex, 422, errorJson);
+            return;
         }
 
-        if (movieFromUser.getYear() < 1888 || movieFromUser.getYear() > 2027) {
+        int maxAllowedYear = LocalDateTime.now().plusYears(1).getYear();
+
+        if (movieFromUser.getYear() < CINEMA_BIRTH_YEAR || movieFromUser.getYear() > maxAllowedYear) {
             ErrorResponse error = new ErrorResponse("Ошибка валидации!", new String[]{"Значение поля 'year' " +
-                    "должно быть между 1888 и 2027"});
+                    "должно быть между " + CINEMA_BIRTH_YEAR + " и " + maxAllowedYear});
             String errorJson = gson.toJson(error);
             sendJson(ex, 422, errorJson);
+            return;
         }
 
         store.add(movieFromUser);
@@ -138,12 +153,12 @@ public class MoviesHandler extends BaseHttpHandler {
                 return;
             }
 
-            List<Movie> moviesByYear =
-                    store.getAll().stream().filter(movie -> movie.getYear() == year).collect(Collectors.toList());
+            List<Movie> moviesByYear = store.getByYear(year);
 
             String json = gson.toJson(moviesByYear);
             sendJson(ex, 200, json);
-        } else if (pathParts.length > 2) {
+
+        } else if (!isInvalidPath(pathParts)) {
 
             String idString = pathParts[2];
             int id;
@@ -163,11 +178,18 @@ public class MoviesHandler extends BaseHttpHandler {
             }
             String json = gson.toJson(requestedMovie);
             sendJson(ex, 200, json);
+
         } else {
             List<Movie> movies = store.getAll();
             String json = gson.toJson(movies);
             sendJson(ex, 200, json);
         }
     }
+
+    private boolean isInvalidPath(String[] pathParts) {
+        return pathParts.length <= 2 || pathParts[2].isEmpty();
+    }
+
+
 }
 

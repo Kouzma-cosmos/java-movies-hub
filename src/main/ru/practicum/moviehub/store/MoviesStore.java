@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MoviesStore {
 
@@ -28,6 +29,12 @@ public class MoviesStore {
 
     public List<Movie> getAll() {
         return new ArrayList<>(movies.values());
+    }
+
+    public List<Movie> getByYear(int year) {
+        return getAll().stream()
+                .filter(movie -> movie.getYear() == year)
+                .collect(Collectors.toList());
     }
 
     public void remove(int id) {
